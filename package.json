@@ -1,15 +1,21 @@
 {
-  "name": "testing-ssbu",
+  "name": "better-random-ssbu",
   "version": "0.1.0",
-  "private": true,
+  "author": "Sam Churchill",
+  "license": "MIT",
   "scripts": {
-    "dev": "next dev",
+    "dev": "node server.js -p $PORT",
     "build": "next build",
-    "start": "next start -p $PORT"
+    "start": "NODE_ENV=production node server.js -p $PORT"
   },
   "dependencies": {
-    "next": "10.0.3",
-    "react": "17.0.1",
-    "react-dom": "17.0.1"
+    "bootstrap": "^4.4.1",
+    "express": "^4.17.1",
+    "next": "latest",
+    "react": "^16.13.1",
+    "react-bootstrap": "^1.0.1",
+    "react-dom": "^16.13.1",
+    "react-icons": "^4.1.0",
+    "swr": "^0.3.9"
   }
 }
