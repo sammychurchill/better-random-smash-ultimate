@@ -15,10 +15,10 @@ import CharacterCard from "../components/CharacterCard";
 import CollapsedCard from "../components/CollapsedCard";
 import RandomChoiceModal from "../components/RandomChoiceModal";
 
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
+const fetcher = (...args) => fetch(...args).then((res) => res.body);
 
 // const production = "http://localhost:3000";
-const production = "https://better-random-ssbu.herokuapp.com";
+const production = "https://better-random-smash-ultimate.vercel.app/";
 const development = "http://localhost:3000";
 const URL_BASE =
   process.env.NODE_ENV === "development" ? development : production;
@@ -33,7 +33,6 @@ export default function Home(props) {
   const [modalShow, setModalShow] = React.useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [chars, setChars] = React.useState([]);
-
   const initalData = props.char;
   const { data, error } = useSWR("/api/chars", fetcher, { initalData });
 
