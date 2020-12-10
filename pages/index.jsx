@@ -4,10 +4,12 @@ import Head from "next/head";
 
 import {
   Container,
+  CardColumns,
   Row,
   DropdownButton,
   Dropdown,
   Button,
+  Navbar,
 } from "react-bootstrap";
 import { BsArrowsCollapse, BsArrowsExpand } from "react-icons/bs";
 
@@ -92,38 +94,43 @@ export default function Home(props) {
   if (!chars) return <div>Loading...</div>;
 
   return (
-    <Container className="md-container">
-      <Head>
-        <title>Random Fighter</title>
-        <link rel="icon" href="/favicon-32x32.png" />
-      </Head>
+    <>
       <Container>
         <h1>Random Fighter</h1>
-        <Container>
-          <Row className="justify-content-between align-items-center">
-            <Button variant="primary" onClick={handleShow}>
-              Choose Random!
-            </Button>
-            <DropdownButton menuAlign="right" variant="secondary" title="Sort">
-              <Dropdown.Item onClick={() => handleSortClick("alpha")}>
-                Alphabetically
-              </Dropdown.Item>
-              <Dropdown.Item onClick={() => handleSortClick("starred")}>
-                Liked
-              </Dropdown.Item>
-            </DropdownButton>
-            {collapsed ? (
-              <h3>
-                <BsArrowsExpand onClick={handleCollapse} />
-              </h3>
-            ) : (
-              <h3>
-                <BsArrowsCollapse onClick={handleCollapse} />
-              </h3>
-            )}
-          </Row>
+      </Container>
+      <Navbar sticky="top" variant="light" bg="light">
+        <Container fluid>
+          <Button variant="primary" onClick={handleShow}>
+            Choose Random!
+          </Button>
+          <DropdownButton menuAlign="right" variant="secondary" title="Sort">
+            <Dropdown.Item onClick={() => handleSortClick("alpha")}>
+              Alphabetically
+            </Dropdown.Item>
+            <Dropdown.Item onClick={() => handleSortClick("starred")}>
+              Liked
+            </Dropdown.Item>
+          </DropdownButton>
           {collapsed ? (
-            <Row className="justify-content-between">
+            <h3>
+              <BsArrowsExpand onClick={handleCollapse} />
+            </h3>
+          ) : (
+            <h3>
+              <BsArrowsCollapse onClick={handleCollapse} />
+            </h3>
+          )}
+        </Container>
+      </Navbar>
+      <Container>
+        <Head>
+          <title>Random Fighter</title>
+          <link rel="icon" href="/favicon-32x32.png" />
+        </Head>
+
+        <Container>
+          {collapsed ? (
+            <Row className="justify-content-space-between">
               {chars.map((item, index) => (
                 <CollapsedCard
                   key={index}
@@ -134,7 +141,7 @@ export default function Home(props) {
               ))}
             </Row>
           ) : (
-            <Row className="justify-content-between">
+            <CardColumns className="justify-content-center">
               {chars.map((item, index) => (
                 <CharacterCard
                   key={index}
@@ -143,17 +150,17 @@ export default function Home(props) {
                   {...item}
                 />
               ))}
-            </Row>
+            </CardColumns>
           )}
         </Container>
+        {modalShow && (
+          <RandomChoiceModal
+            items={chars}
+            show={modalShow}
+            onHide={() => setModalShow(false)}
+          />
+        )}
       </Container>
-      {modalShow && (
-        <RandomChoiceModal
-          items={chars}
-          show={modalShow}
-          onHide={() => setModalShow(false)}
-        />
-      )}
-    </Container>
+    </>
   );
 }
