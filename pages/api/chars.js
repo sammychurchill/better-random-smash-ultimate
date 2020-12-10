@@ -514,6 +514,5 @@ const chars = [
 ];
 
 export default function handler(req, res) {
-  //   console.log(chars.length);
   res.status(200).json(chars);
 }

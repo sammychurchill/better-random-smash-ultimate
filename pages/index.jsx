@@ -15,10 +15,7 @@ import CharacterCard from "../components/CharacterCard";
 import CollapsedCard from "../components/CollapsedCard";
 import RandomChoiceModal from "../components/RandomChoiceModal";
 
-const fetcher = (url) =>
-  fetch(url)
-    .then((res) => res.json())
-    .then((data) => data);
+const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 // const production = "http://localhost:3000";
 const production = "https://better-random-ssbu.herokuapp.com";
