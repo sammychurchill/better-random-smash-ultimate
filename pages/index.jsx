@@ -15,7 +15,7 @@ import CharacterCard from "../components/CharacterCard";
 import CollapsedCard from "../components/CollapsedCard";
 import RandomChoiceModal from "../components/RandomChoiceModal";
 
-const fetcher = (...args) => fetch(...args).then((res) => res.body);
+const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 // const production = "http://localhost:3000";
 const production = "https://better-random-smash-ultimate.vercel.app/";
