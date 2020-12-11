@@ -5,13 +5,17 @@ import Head from "next/head";
 import {
   Container,
   CardColumns,
-  Row,
+  Modal,
   DropdownButton,
   Dropdown,
   Button,
   Navbar,
+  Form,
+  Row,
+  Col,
 } from "react-bootstrap";
 import { BsArrowsCollapse, BsArrowsExpand } from "react-icons/bs";
+import { MdDeleteForever } from "react-icons/md";
 
 import CharacterCard from "../components/CharacterCard";
 import CollapsedCard from "../components/CollapsedCard";
@@ -33,10 +37,27 @@ export async function getServerSideProps() {
 export default function Home(props) {
   const [sort, setSort] = useState(["alpha"]);
   const [modalShow, setModalShow] = React.useState(false);
+  const [newListModalShow, setNewListModalShow] = React.useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [chars, setChars] = React.useState([]);
+  const [lists, setLists] = React.useState([]);
+  const [newListValue, setNewListValue] = React.useState("");
+
   const initalData = props.char;
   const { data, error } = useSWR("/api/chars", fetcher, { initalData });
+
+  let onLoadSelectedList;
+  if (typeof window !== "undefined") {
+    onLoadSelectedList = localStorage.getItem("selectedList");
+    if (!lists.includes(onLoadSelectedList)) {
+      localStorage.removeItem(onLoadSelectedList);
+      onLoadSelectedList = null;
+    }
+  }
+
+  const [selectedList, setSelectedList] = React.useState(
+    onLoadSelectedList || "Default"
+  );
 
   function merge(a, b, prop) {
     var reduced = a.filter(
@@ -45,21 +66,38 @@ export default function Home(props) {
     return reduced.concat(b);
   }
 
+  // useEffect(() => {
+  //   if (typeof window !== "undefined") {
+  //     localStorage.setItem("lists", JSON.stringify(lists));
+  //   }
+  // }, [lists]);
+
   useEffect(() => {
     let localChars;
-    if (typeof window !== "undefined" && data) {
-      localChars = JSON.parse(localStorage.getItem("chars"));
-
-      if (!localChars) {
-        localStorage.setItem("chars", JSON.stringify(data));
-        localChars = [];
+    let localLists;
+    if (typeof window !== "undefined") {
+      if (data) {
+        localChars = JSON.parse(localStorage.getItem(selectedList));
+        if (!localChars) {
+          localStorage.setItem(selectedList, JSON.stringify(data));
+          localChars = [];
+        }
+        const mergedLocalData = merge(data, localChars, "id");
+        setChars(mergedLocalData);
+      } else {
+        setChars(data);
       }
-      const mergedLocalData = merge(data, localChars, "id");
-      setChars(mergedLocalData);
-    } else {
-      setChars(data);
+
+      localLists = JSON.parse(localStorage.getItem("lists"));
+      if (!localLists || localLists.length === 0) {
+        localLists = ["Default"];
+        localStorage.setItem("lists", JSON.stringify(localLists));
+      }
+      setLists(localLists);
+
+      localStorage.setItem("selectedList", selectedList);
     }
-  }, [data]);
+  }, [data, selectedList]);
 
   useEffect(() => {
     if (sort === "alpha") {
@@ -81,7 +119,7 @@ export default function Home(props) {
     const newItems = [...chars];
     const item = chars[index];
     item.starred ? (item.starred = false) : (item.starred = true);
-    localStorage.setItem("chars", JSON.stringify(newItems));
+    localStorage.setItem(selectedList, JSON.stringify(newItems));
     setChars(newItems);
   };
 
@@ -89,6 +127,28 @@ export default function Home(props) {
   const handleCollapse = () => setCollapsed(!collapsed);
   const handleClose = () => setModalShow(false);
   const handleShow = () => setModalShow(true);
+  const handleNewListShow = () => setNewListModalShow(true);
+  const handleNewListClose = () => setNewListModalShow(false);
+  const handleNewListValueChange = (e) => setNewListValue(e.target.value);
+  const handleListChange = (listName) => setSelectedList(listName);
+  const handleNewListSave = () => {
+    const newLists = [newListValue, ...lists];
+    console.log(newLists);
+    setLists(newLists);
+    localStorage.setItem("lists", JSON.stringify(newLists));
+    setSelectedList(newListValue);
+    setNewListValue("");
+    setNewListModalShow(false);
+    setChars(chars.map((c) => (c.starred = false)));
+  };
+
+  const handleListDeleteClick = () => {
+    const newLists = lists.filter((l) => l !== selectedList);
+    localStorage.removeItem(selectedList);
+    setSelectedList(newLists[0] || "Default");
+    setLists(newLists);
+    localStorage.setItem("lists", JSON.stringify(newLists));
+  };
 
   if (error) return <div>Failed to load characters</div>;
   if (!chars) return <div>Loading...</div>;
@@ -96,14 +156,43 @@ export default function Home(props) {
   return (
     <>
       <Container>
-        <h1>Random Fighter</h1>
+        <Row>
+          <h1>Random Fighter</h1>
+        </Row>
+        <Row className="align-items-center">
+          <Col>
+            <DropdownButton title="Choose List">
+              {lists.map((list) => (
+                <Dropdown.Item onClick={() => handleListChange(list)}>
+                  {list}
+                </Dropdown.Item>
+              ))}
+              <Dropdown.Divider />
+              <Dropdown.Item onClick={handleNewListShow}>Add New</Dropdown.Item>
+            </DropdownButton>
+          </Col>
+          <Col>
+            <Row className="justify-content-end">
+              <h4>{selectedList}</h4>
+              <MdDeleteForever
+                size="32"
+                onClick={handleListDeleteClick}
+              ></MdDeleteForever>
+            </Row>
+          </Col>
+        </Row>
       </Container>
-      <Navbar sticky="top" variant="light" bg="light">
+      <Navbar sticky="bottom" fixed="bottom" variant="light" bg="light">
         <Container fluid>
           <Button variant="primary" onClick={handleShow}>
             Choose Random!
           </Button>
-          <DropdownButton menuAlign="right" variant="secondary" title="Sort">
+          <DropdownButton
+            drop="up"
+            menuAlign="right"
+            variant="secondary"
+            title="Sort"
+          >
             <Dropdown.Item onClick={() => handleSortClick("alpha")}>
               Alphabetically
             </Dropdown.Item>
@@ -130,7 +219,7 @@ export default function Home(props) {
 
         <Container>
           {collapsed ? (
-            <Row className="justify-content-space-between">
+            <CardColumns className="justify-content-between">
               {chars.map((item, index) => (
                 <CollapsedCard
                   key={index}
@@ -139,9 +228,9 @@ export default function Home(props) {
                   {...item}
                 />
               ))}
-            </Row>
+            </CardColumns>
           ) : (
-            <CardColumns className="justify-content-center">
+            <CardColumns className="justify-content-between">
               {chars.map((item, index) => (
                 <CharacterCard
                   key={index}
@@ -159,6 +248,34 @@ export default function Home(props) {
             show={modalShow}
             onHide={() => setModalShow(false)}
           />
+        )}
+        {newListModalShow && (
+          <Modal
+            {...props}
+            size="xl"
+            aria-labelledby="contained-modal-title-vcenter"
+            dialogClassName="modal-50h"
+            centered
+            show={newListModalShow}
+          >
+            <Modal.Body>
+              <Form.Group controlId="formBasicEmail">
+                <Form.Label>New List Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={newListValue}
+                  onChange={handleNewListValueChange}
+                  placeholder="Main/Bad Boyz/Sad boys"
+                />
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={handleNewListClose}>
+                Close
+              </Button>
+              <Button onClick={handleNewListSave}>Save</Button>
+            </Modal.Footer>
+          </Modal>
         )}
       </Container>
     </>
