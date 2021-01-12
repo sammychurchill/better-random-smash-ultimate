@@ -35,69 +35,54 @@ export async function getServerSideProps() {
 }
 
 export default function Home(props) {
+  const initalData = props.char;
+  const { data, error } = useSWR("/api/chars", fetcher, { initalData });
+
+  // State setup
   const [sort, setSort] = useState(["alpha"]);
   const [modalShow, setModalShow] = React.useState(false);
   const [newListModalShow, setNewListModalShow] = React.useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [chars, setChars] = React.useState([]);
-  const [lists, setLists] = React.useState([]);
   const [newListValue, setNewListValue] = React.useState("");
 
-  const initalData = props.char;
-  const { data, error } = useSWR("/api/chars", fetcher, { initalData });
-
-  let onLoadSelectedList;
-  if (typeof window !== "undefined") {
-    onLoadSelectedList = localStorage.getItem("selectedList");
-    if (!lists.includes(onLoadSelectedList)) {
-      localStorage.removeItem(onLoadSelectedList);
-      onLoadSelectedList = null;
+  function localSelectedList() {
+    let localSelectedList;
+    if (typeof window !== "undefined") {
+      localSelectedList = localStorage.getItem("selectedList");
+      return localSelectedList || "Default";
     }
   }
+  const [selectedList, setSelectedList] = React.useState(localSelectedList());
 
-  const [selectedList, setSelectedList] = React.useState(
-    onLoadSelectedList || "Default"
-  );
-
-  function merge(a, b, prop) {
-    var reduced = a.filter(
-      (aitem) => !b.find((bitem) => aitem[prop] === bitem[prop])
-    );
-    return reduced.concat(b);
+  function getLocalLists() {
+    let lists;
+    if (typeof window !== "undefined") {
+      lists = JSON.parse(localStorage.getItem("lists"));
+    }
+    if (!lists || lists.length === 0) {
+      lists = { Default: [] };
+    }
+    return lists;
   }
+  const [lists, setLists] = React.useState(getLocalLists());
 
-  // useEffect(() => {
-  //   if (typeof window !== "undefined") {
-  //     localStorage.setItem("lists", JSON.stringify(lists));
-  //   }
-  // }, [lists]);
+  // Effects
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("lists", JSON.stringify(lists));
+    }
+  }, [lists]);
 
   useEffect(() => {
-    let localChars;
-    let localLists;
     if (typeof window !== "undefined") {
-      if (data) {
-        localChars = JSON.parse(localStorage.getItem(selectedList));
-        if (!localChars) {
-          localStorage.setItem(selectedList, JSON.stringify(data));
-          localChars = [];
-        }
-        const mergedLocalData = merge(data, localChars, "id");
-        setChars(mergedLocalData);
-      } else {
-        setChars(data);
-      }
-
-      localLists = JSON.parse(localStorage.getItem("lists"));
-      if (!localLists || localLists.length === 0) {
-        localLists = ["Default"];
-        localStorage.setItem("lists", JSON.stringify(localLists));
-      }
-      setLists(localLists);
-
       localStorage.setItem("selectedList", selectedList);
     }
-  }, [data, selectedList]);
+  }, [selectedList]);
+
+  useEffect(() => {
+    setChars(data);
+  }, [data]);
 
   useEffect(() => {
     if (sort === "alpha") {
@@ -109,18 +94,30 @@ export default function Home(props) {
       });
       setChars(newItems);
     } else {
-      const starredItems = chars.filter((i) => i.starred);
-      const unstarredItems = chars.filter((i) => !i.starred);
+      let starredItems = [];
+      let unstarredItems = [];
+      chars.forEach((item) => {
+        if (lists[selectedList].includes(item.id)) {
+          starredItems.push(item);
+        } else {
+          unstarredItems.push(item);
+        }
+      });
       setChars([...starredItems, ...unstarredItems]);
     }
   }, [sort]);
 
-  const handleCardClick = (index) => {
-    const newItems = [...chars];
-    const item = chars[index];
-    item.starred ? (item.starred = false) : (item.starred = true);
-    localStorage.setItem(selectedList, JSON.stringify(newItems));
-    setChars(newItems);
+  // Event handlers
+  const handleCardClick = (id) => {
+    const newLists = { ...lists };
+    let newList = [...newLists[selectedList]];
+    if (newList.includes(id)) {
+      newList = newList.filter((item) => item != id);
+    } else {
+      newList.push(id);
+    }
+    newLists[selectedList] = newList;
+    setLists(newLists);
   };
 
   const handleSortClick = (sort) => setSort(sort);
@@ -131,25 +128,29 @@ export default function Home(props) {
   const handleNewListClose = () => setNewListModalShow(false);
   const handleNewListValueChange = (e) => setNewListValue(e.target.value);
   const handleListChange = (listName) => setSelectedList(listName);
+
   const handleNewListSave = () => {
-    const newLists = [newListValue, ...lists];
-    console.log(newLists);
+    const newLists = { ...lists };
+    newLists[newListValue] = [];
     setLists(newLists);
-    localStorage.setItem("lists", JSON.stringify(newLists));
     setSelectedList(newListValue);
     setNewListValue("");
     setNewListModalShow(false);
-    setChars(chars.map((c) => (c.starred = false)));
   };
 
   const handleListDeleteClick = () => {
-    const newLists = lists.filter((l) => l !== selectedList);
-    localStorage.removeItem(selectedList);
-    setSelectedList(newLists[0] || "Default");
+    const newLists = { ...lists };
+    console.log(Object.keys(newLists).length);
+    if (Object.keys(newLists).length <= 1) {
+      newLists["Default"] = [];
+    } else {
+      delete newLists[selectedList];
+    }
     setLists(newLists);
-    localStorage.setItem("lists", JSON.stringify(newLists));
+    setSelectedList(Object.keys(newLists)[0]);
   };
 
+  // Rendering
   if (error) return <div>Failed to load characters</div>;
   if (!chars) return <div>Loading...</div>;
 
@@ -162,7 +163,7 @@ export default function Home(props) {
         <Row className="align-items-center">
           <Col>
             <DropdownButton title="Choose List">
-              {lists.map((list) => (
+              {Object.keys(lists).map((list) => (
                 <Dropdown.Item onClick={() => handleListChange(list)}>
                   {list}
                 </Dropdown.Item>
@@ -224,7 +225,8 @@ export default function Home(props) {
                 <CollapsedCard
                   key={index}
                   index={index}
-                  onClick={() => handleCardClick(index)}
+                  onClick={() => handleCardClick(item.id)}
+                  starred={lists[selectedList].includes(item.id)}
                   {...item}
                 />
               ))}
@@ -235,7 +237,8 @@ export default function Home(props) {
                 <CharacterCard
                   key={index}
                   index={index}
-                  onClick={() => handleCardClick(index)}
+                  onClick={() => handleCardClick(item.id)}
+                  starred={lists[selectedList].includes(item.id)}
                   {...item}
                 />
               ))}
@@ -244,7 +247,9 @@ export default function Home(props) {
         </Container>
         {modalShow && (
           <RandomChoiceModal
-            items={chars}
+            items={chars.filter((item) =>
+              lists[selectedList].includes(item.id)
+            )}
             show={modalShow}
             onHide={() => setModalShow(false)}
           />
@@ -273,7 +278,12 @@ export default function Home(props) {
               <Button variant="secondary" onClick={handleNewListClose}>
                 Close
               </Button>
-              <Button onClick={handleNewListSave}>Save</Button>
+              <Button
+                disabled={newListValue.length < 1}
+                onClick={handleNewListSave}
+              >
+                Save
+              </Button>
             </Modal.Footer>
           </Modal>
         )}

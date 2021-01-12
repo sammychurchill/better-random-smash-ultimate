@@ -450,6 +450,12 @@ const chars = [
     ufPage: "https://ultimateframedata.com/steve.php",
   },
   {
+    id: "sephiroth",
+    title: "Sephiroth",
+    thumbnailURL: "https://ultimateframedata.com/characterart/sephiroth.jpg",
+    ufPage: "https://ultimateframedata.com/sephiroth.php",
+  },
+  {
     id: "terry",
     title: "Terry",
     thumbnailURL: "https://ultimateframedata.com/characterart/terry.jpg",
