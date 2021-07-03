@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import useCountDown from "react-countdown-hook";
-import { Modal, Button, Spinner, Row } from "react-bootstrap";
+import { Modal, Button, Spinner, Row, Image } from "react-bootstrap";
+import Link from 'next'
 
 const ModalContent = ({items, selected, timeLeft}) => {
   if (items.length < 0 ) {
@@ -13,6 +14,10 @@ const ModalContent = ({items, selected, timeLeft}) => {
 
   return (
     <>
+    {timeLeft === 0? <a href={selected.ufPage }  target="_blank">
+          <Image src="https://ultimateframedata.com/favicon-32x32.png" roundedCircle />
+          </a>: null}
+        
      <img height="300vh" src={selected.thumbnailURL}></img>
      </>
     )
@@ -61,6 +66,7 @@ export default function RandomChoiceModal({items, onHide, ...rest}) {
       centered
     >
       <Modal.Body>
+        
         <Row className="justify-content-center">
           <ModalContent selected={selected} items={items} timeLeft={timeLeft} />
         </Row>
