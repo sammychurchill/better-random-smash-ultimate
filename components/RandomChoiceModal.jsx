@@ -1,30 +1,34 @@
 import { useEffect, useState } from "react";
 import useCountDown from "react-countdown-hook";
 import { Modal, Button, Spinner, Row, Image } from "react-bootstrap";
-import Link from 'next'
+import Link from "next";
 
-const ModalContent = ({items, selected, timeLeft}) => {
-  if (items.length < 0 ) {
-    return <p>Please choose some characters ya dolt!</p>
+const ModalContent = ({ items, selected, timeLeft }) => {
+  if (items.length < 0) {
+    return <p>Please choose some characters ya dolt!</p>;
   }
 
   if (!selected) {
-    return <p>error</p>
+    return <p>error</p>;
   }
 
   return (
     <>
-    {timeLeft === 0? <a href={selected.ufPage }  target="_blank">
-          <Image src="https://ultimateframedata.com/favicon-32x32.png" roundedCircle />
-          </a>: null}
-        
-     <img height="300vh" src={selected.thumbnailURL}></img>
-     </>
-    )
-}
+      {timeLeft === 0 ? (
+        <a href={selected.ufPage} target="_blank">
+          <Image
+            src="https://ultimateframedata.com/favicon-32x32.png"
+            roundedCircle
+          />
+        </a>
+      ) : null}
 
+      <img height="300vh" src={selected.thumbnailURL}></img>
+    </>
+  );
+};
 
-export default function RandomChoiceModal({items, onHide, ...rest}) {
+export default function RandomChoiceModal({ items, onHide, ...rest }) {
   const getRandItem = (arr, prev) => {
     const rand = Math.floor(Math.random() * arr.length);
     const item = arr[rand];
@@ -55,8 +59,6 @@ export default function RandomChoiceModal({items, onHide, ...rest}) {
     start(2000);
   };
 
-  
-
   return (
     <Modal
       {...rest}
@@ -66,7 +68,6 @@ export default function RandomChoiceModal({items, onHide, ...rest}) {
       centered
     >
       <Modal.Body>
-        
         <Row className="justify-content-center">
           <ModalContent selected={selected} items={items} timeLeft={timeLeft} />
         </Row>
