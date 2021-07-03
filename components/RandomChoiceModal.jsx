@@ -1,8 +1,25 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import useCountDown from "react-countdown-hook";
 import { Modal, Button, Spinner, Row } from "react-bootstrap";
 
-export default function RandomChoiceModal(props) {
+const ModalContent = ({items, selected, timeLeft}) => {
+  if (items.length < 0 ) {
+    return <p>Please choose some characters ya dolt!</p>
+  }
+
+  if (!selected) {
+    return <p>error</p>
+  }
+
+  return (
+    <>
+     <img height="300vh" src={selected.thumbnailURL}></img>
+     </>
+    )
+}
+
+
+export default function RandomChoiceModal({items, onHide, ...rest}) {
   const getRandItem = (arr, prev) => {
     const rand = Math.floor(Math.random() * arr.length);
     const item = arr[rand];
@@ -12,8 +29,8 @@ export default function RandomChoiceModal(props) {
     return item;
   };
 
-  const [selected, setSelected] = React.useState(getRandItem(props.items));
-  const [coundownRunning, setCountdownRunning] = React.useState(false);
+  const [selected, setSelected] = useState(getRandItem(items));
+  const [coundownRunning, setCountdownRunning] = useState(false);
   const [timeLeft, { start, pause, resume, reset }] = useCountDown(2000, 190);
 
   useEffect(() => {
@@ -22,7 +39,7 @@ export default function RandomChoiceModal(props) {
   }, []);
 
   useEffect(() => {
-    setSelected(getRandItem(props.items), selected);
+    setSelected(getRandItem(items), selected);
     if (timeLeft === 0) {
       setCountdownRunning(false);
     }
@@ -33,9 +50,11 @@ export default function RandomChoiceModal(props) {
     start(2000);
   };
 
+  
+
   return (
     <Modal
-      {...props}
+      {...rest}
       size="xl"
       aria-labelledby="contained-modal-title-vcenter"
       dialogClassName="modal-50h"
@@ -43,21 +62,16 @@ export default function RandomChoiceModal(props) {
     >
       <Modal.Body>
         <Row className="justify-content-center">
-          {props.items.length > 0 ? (
-            selected && <img height="300vh" src={selected.thumbnailURL}></img>
-          ) : (
-            <p>Please choose some characters ya dolt!</p>
-          )}
+          <ModalContent selected={selected} items={items} timeLeft={timeLeft} />
         </Row>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={props.onHide}>
+        <Button variant="secondary" onClick={onHide}>
           Close
         </Button>
-        {props.items.length > 0 ? (
+        {items.length > 0 ? (
           <Button disabled={coundownRunning} onClick={() => handleGoAgain()}>
             Go Again
-            {/* {timeLeft} */}
           </Button>
         ) : (
           ""
