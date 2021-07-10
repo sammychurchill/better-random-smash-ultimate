@@ -15,7 +15,6 @@ export default function CharacterCard(props) {
         <Card.Img
           className={starred ? "" : "gray"}
           variant="top"
-          height="300vh"
           src={thumbnailURL}
         />
       </Card.Body>

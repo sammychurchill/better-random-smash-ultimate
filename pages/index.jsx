@@ -40,11 +40,11 @@ export default function Home(props) {
 
   // State setup
   const [sort, setSort] = useState(["alpha"]);
-  const [modalShow, setModalShow] = React.useState(false);
-  const [newListModalShow, setNewListModalShow] = React.useState(false);
+  const [modalShow, setModalShow] = useState(false);
+  const [newListModalShow, setNewListModalShow] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [chars, setChars] = React.useState([]);
-  const [newListValue, setNewListValue] = React.useState("");
+  const [chars, setChars] = useState([]);
+  const [newListValue, setNewListValue] = useState("");
 
   function localSelectedList() {
     let localSelectedList;
@@ -53,8 +53,8 @@ export default function Home(props) {
       return localSelectedList || "Default";
     }
   }
-  const [selectedList, setSelectedList] = React.useState(localSelectedList());
-
+  const [selectedList, setSelectedList] = useState(localSelectedList());
+// test1
   function getLocalLists() {
     let lists;
     if (typeof window !== "undefined") {
@@ -65,7 +65,7 @@ export default function Home(props) {
     }
     return lists;
   }
-  const [lists, setLists] = React.useState(getLocalLists());
+  const [lists, setLists] = useState(getLocalLists());
 
   // Effects
   useEffect(() => {
